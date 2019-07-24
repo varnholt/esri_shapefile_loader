@@ -1,6 +1,6 @@
 # ESRI Shapefile Loader
 
-A shapefile stores nontopological geometry and attribute information for the spatialfeatures in a data set.  
+A shapefile stores nontopological geometry and attribute information for the spatial features in a data set.  
 The geometry for a feature is stored as a shape comprising a set of vector coordinates.
 
 ## Specification
