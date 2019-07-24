@@ -13,5 +13,5 @@ https://www.naturalearthdata.com/downloads/
 
 ## Example screenshots of loaded vector data:
 
-![example screenshot 1](/doc/screenshot_1.png){width=75%}  
-![example screenshot 2](/doc/screenshot_2.png){width=75%}
+![example screenshot 1](/doc/screenshot_1.png)  
+![example screenshot 2](/doc/screenshot_2.png)
