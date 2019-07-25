@@ -1,122 +1,114 @@
 #include "shapeloader.h"
 
-// Qt
-#include <QFile>
-
-// shapeloader
 #include "pointrecord.h"
 #include "shapeheader.h"
 #include "shapepoint.h"
 #include "shapepolygon.h"
+
+#include <fstream>
 
 
 // http://www.esri.com/library/whitepapers/pdfs/shapefile.pdf
 // http://en.wikipedia.org/wiki/Shapefile#Shapefile_shape_format_.28.shp.29
 
 
-void ShapeLoader::load(const QString &filename)
+void ShapeLoader::load(const std::string& filename)
 {
-    QFile file(filename);
+    std::ifstream in;
+    in.open(filename, std::ios::binary);
 
-    if (file.open(QIODevice::ReadOnly))
+    if (!in.is_open())
     {
-        QDataStream in(&file);
+        return;
+    }
 
-        mHeader.deserialize(in);
-        mHeader.debug();
+    mHeader.deserialize(in);
 
-        switch (mHeader.getShapeType())
-        {
-           case Shape::ShapeType::ShapeTypePoint:
-           {
+    switch (mHeader.getShapeType())
+    {
+       case Shape::ShapeType::ShapeTypePoint:
+       {
+          while (in.good())
+          {
+              PointRecord pr;
+              pr.deserialize(in);
+              mPoints.push_back(pr.getPoint());
+          }
 
-              while (!in.atEnd())
-              {
-                  PointRecord pr;
-                  pr.deserialize(in);
-                  mPoints.push_back(pr.getPoint());
-              }
-
-              break;
-           }
+          break;
+       }
 
 
-           case Shape::ShapeType::ShapeTypePolygon:
-           {
-              ShapePolygon poly;
+       case Shape::ShapeType::ShapeTypePolygon:
+       {
+          ShapePolygon poly;
 
-              while (!in.atEnd())
-              {
-                 poly.deserialize(in);
-                 poly.debug();
+          while (in.good())
+          {
+             poly.deserialize(in);
 
-                 QList<ShapePolygon> parts;
+             std::vector<ShapePolygon> parts;
 
-                 if (poly.mNumParts>1)
-                 {
-                    parts = poly.simplify();
-                 }
+             if (poly.mNumParts > 1)
+             {
+                parts = poly.simplify();
+             }
 
-                 mPolygons.push_back(poly);
+             mPolygons.push_back(poly);
 
-                 foreach(const ShapePolygon& part, parts)
-                 {
-                    mPolygons.push_back(part);
-                 }
-              }
+             for (const auto& part : parts)
+             {
+                mPolygons.push_back(part);
+             }
+          }
 
-              break;
-           }
+          break;
+       }
 
-           case Shape::ShapeType::ShapeTypeNullShape:
-           case Shape::ShapeType::ShapeTypePolyLine:
-           case Shape::ShapeType::ShapeTypeMultiPoint:
-           case Shape::ShapeType::ShapeTypePointZ:
-           case Shape::ShapeType::ShapeTypePolyLineZ:
-           case Shape::ShapeType::ShapeTypePolygonZ:
-           case Shape::ShapeType::ShapeTypeMultiPointZ:
-           case Shape::ShapeType::ShapeTypePointM:
-           case Shape::ShapeType::ShapeTypePolyLineM:
-           case Shape::ShapeType::ShapeTypePolygonM:
-           case Shape::ShapeType::ShapeTypeMultiPointM:
-           case Shape::ShapeType::ShapeTypeMultiPatch:
-           {
-              break;
-           }
-        }
+       case Shape::ShapeType::ShapeTypeNullShape:
+       case Shape::ShapeType::ShapeTypePolyLine:
+       case Shape::ShapeType::ShapeTypeMultiPoint:
+       case Shape::ShapeType::ShapeTypePointZ:
+       case Shape::ShapeType::ShapeTypePolyLineZ:
+       case Shape::ShapeType::ShapeTypePolygonZ:
+       case Shape::ShapeType::ShapeTypeMultiPointZ:
+       case Shape::ShapeType::ShapeTypePointM:
+       case Shape::ShapeType::ShapeTypePolyLineM:
+       case Shape::ShapeType::ShapeTypePolygonM:
+       case Shape::ShapeType::ShapeTypeMultiPointM:
+       case Shape::ShapeType::ShapeTypeMultiPatch:
+       {
+          break;
+       }
+    }
 
-        auto totalverts = 0;
-        for (auto i = 0; i < mPolygons.size(); i++)
-        {
-           mPolygons[i].optimize(0.1f);
-           totalverts += mPolygons[i].mNumPoints;
-        }
-
-        qDebug("total vertices: %d", totalverts);
+    for (auto& p : mPolygons)
+    {
+       p.optimize(0.1f);
     }
 }
 
 
 
-const QList<ShapePolygon> &ShapeLoader::getPolygons()
+const std::vector<ShapePolygon>& ShapeLoader::getPolygons()
 {
    return mPolygons;
 }
 
 
-const ShapeHeader &ShapeLoader::getShapeHeader()
+const ShapeHeader& ShapeLoader::getShapeHeader()
 {
    return mHeader;
 }
 
 
-const QList<ShapePoint> &ShapeLoader::getPoints() const
+const std::vector<ShapePoint>& ShapeLoader::getPoints() const
 {
     return mPoints;
 }
 
 
-void ShapeLoader::setPoints(const QList<ShapePoint> &value)
+void ShapeLoader::setPoints(const std::vector<ShapePoint>& value)
 {
     mPoints = value;
 }

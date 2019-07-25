@@ -26,11 +26,11 @@ public:
    const ShapeHeader& getPolyShapeHeader() const;
    void setPolyShapeHeader(const ShapeHeader &value);
 
-   const QList<ShapePolygon>& getPolygons() const;
-   void setPolygons(const QList<ShapePolygon> &value);
+   const std::vector<ShapePolygon>& getPolygons() const;
+   void setPolygons(const std::vector<ShapePolygon> &value);
 
-   const QList<ShapePoint>& getPoints() const;
-   void setPoints(const QList<ShapePoint> &value);
+   const std::vector<ShapePoint>& getPoints() const;
+   void setPoints(const std::vector<ShapePoint> &value);
 
    const ShapeHeader& getPointShapeHeader() const;
    void setPointShapeHeader(const ShapeHeader &value);
@@ -47,8 +47,8 @@ protected:
 
    ShapeHeader mPolyShapeHeader;
    ShapeHeader mPointShapeHeader;
-   QList<ShapePolygon> mPolygons;
-   QList<ShapePoint> mPoints;
+   std::vector<ShapePolygon> mPolygons;
+   std::vector<ShapePoint> mPoints;
    QTime mGlobalTime;
    QTimer mUpdatePaintTimer;
 };

@@ -1,20 +1,16 @@
 #pragma once
 
-// Qt
-#include <QDataStream>
+#include <fstream>
 
-// shapeloader
 #include "shape.h"
-
 
 class ShapePoint : public Shape
 {
-
 public:
 
     ShapePoint() = default;
 
-    void deserialize(QDataStream& in);
+    void deserialize(std::ifstream& in);
 
     double getX() const;
     void setX(double value);
@@ -27,6 +23,5 @@ protected:
 
     double mX = 0.0;
     double mY = 0.0;
-
 };
 

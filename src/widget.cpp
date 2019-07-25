@@ -1,4 +1,3 @@
-// header
 #include "widget.h"
 
 #include <math.h>
@@ -348,37 +347,37 @@ void Widget::paintGL()
 }
 
 
-const ShapeHeader &Widget::getPolyShapeHeader() const
+const ShapeHeader& Widget::getPolyShapeHeader() const
 {
    return mPolyShapeHeader;
 }
 
 
-void Widget::setPolyShapeHeader(const ShapeHeader &value)
+void Widget::setPolyShapeHeader(const ShapeHeader& value)
 {
    mPolyShapeHeader = value;
 }
 
 
-const QList<ShapePolygon> &Widget::getPolygons() const
+const std::vector<ShapePolygon>& Widget::getPolygons() const
 {
    return mPolygons;
 }
 
 
-void Widget::setPolygons(const QList<ShapePolygon> &value)
+void Widget::setPolygons(const std::vector<ShapePolygon>& value)
 {
    mPolygons = value;
 }
 
 
-const QList<ShapePoint> &Widget::getPoints() const
+const std::vector<ShapePoint> &Widget::getPoints() const
 {
     return mPoints;
 }
 
 
-void Widget::setPoints(const QList<ShapePoint> &value)
+void Widget::setPoints(const std::vector<ShapePoint> &value)
 {
     mPoints = value;
 }

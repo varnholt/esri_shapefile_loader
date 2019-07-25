@@ -17,8 +17,7 @@ TEMPLATE = app
 OBJECTS_DIR=.obj
 MOC_DIR=.moc
 
-win32:
-{
+win32 {
    DEFINES += _USE_MATH_DEFINES
    LIBS += -lopengl32
 }
@@ -34,7 +33,8 @@ SOURCES += src/main.cpp \
     src/endian.cpp \
     src/shapenull.cpp \
     src/widget.cpp \
-    src/pointrecord.cpp
+    src/pointrecord.cpp \
+    src/streamreader.cpp
 
 HEADERS += \
     src/shapeloader.h \
@@ -48,7 +48,8 @@ HEADERS += \
     src/shapenull.h \
     src/widget.h \
     src/pointrecord.h \
-    src/vector2.h
+    src/vector2.h \
+    src/streamreader.h
 
 DISTFILES += \
    data/ne_110m_land.shp \

@@ -1,19 +1,17 @@
-// header
 #include "pointrecord.h"
 
-// shapeloader
 #include "endian.h"
+#include "streamreader.h"
 
 
-void PointRecord::deserialize(QDataStream &in)
+void PointRecord::deserialize(std::ifstream& in)
 {
     // read record header
     mRecordHeader.deserialize(in);
 
     // read shape type
     int32_t shapeType;
-    in >> shapeType;
-    shapeType = Endian::swapEndian(shapeType);
+    read(in, &shapeType);
     mShapeType = shapeType;
 
     // read point

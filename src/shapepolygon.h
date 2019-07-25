@@ -1,9 +1,8 @@
 #pragma once
 
-// Qt
-#include <QDataStream>
+#include <fstream>
+#include <vector>
 
-// shapeloader
 #include "shape.h"
 #include "shapebox.h"
 #include "shapepoint.h"
@@ -15,9 +14,8 @@ public:
 
     ShapePolygon() = default;
 
-    void deserialize(QDataStream &in);
-    void debug();
-    QList<ShapePolygon> simplify();
+    void deserialize(std::ifstream& in);
+    std::vector<ShapePolygon> simplify();
     void optimize(float eps);
 
     ShapeBox mBoundingBox;

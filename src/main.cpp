@@ -1,6 +1,5 @@
 #include <QApplication>
 
-// shapeloader
 #include "shapeloader.h"
 #include "widget.h"
 
@@ -10,8 +9,6 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     ShapeLoader earth;
-    // earth.load("data/ne_110m_ocean.shp");
-    // earth.load("data/ne_50m_land.shp");
     earth.load("data/ne_110m_land.shp");
 
     ShapeLoader places;

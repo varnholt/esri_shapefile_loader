@@ -1,67 +1,40 @@
 #include "shapeheader.h"
 
-// endian
 #include "endian.h"
+#include "streamreader.h"
 
 
-void ShapeHeader::deserialize(QDataStream & in)
+void ShapeHeader::deserialize(std::ifstream& in)
 {
     int32_t shapeType = 0;
 
     // big endian part
-    in >> mFileCode;
-    in >> mUnused1;
-    in >> mUnused2;
-    in >> mUnused3;
-    in >> mUnused4;
-    in >> mUnused5;
-    in >> mFileLength;
+    read(in, &mFileCode);
+    read(in, &mUnused1);
+    read(in, &mUnused2);
+    read(in, &mUnused3);
+    read(in, &mUnused4);
+    read(in, &mUnused5);
+    read(in, &mFileLength);
 
     // little endian part
-    in >> mVersion;
-    in >> shapeType;
+    read(in, &mVersion);
+    read(in, &shapeType);
 
-    in >> mXMin;
-    in >> mYMin;
-    in >> mXMax;
-    in >> mYMax;
-    in >> mZMin;
-    in >> mZMax;
-    in >> mMMin;
-    in >> mMMax;
+    read(in, &mXMin);
+    read(in, &mYMin);
+    read(in, &mXMax);
+    read(in, &mYMax);
+    read(in, &mZMin);
+    read(in, &mZMax);
+    read(in, &mMMin);
+    read(in, &mMMax);
 
     // swap endian
-    mVersion = Endian::swapEndian<int32_t>(mVersion);
-    shapeType = Endian::swapEndian<int32_t>(shapeType);
-
-    // bounding box
-    mXMin = Endian::swapEndian<double>(mXMin);
-    mXMax = Endian::swapEndian<double>(mXMax);
-
-    mYMin = Endian::swapEndian<double>(mYMin);
-    mYMax = Endian::swapEndian<double>(mYMax);
-
-    mZMin = Endian::swapEndian<double>(mZMin);
-    mZMax = Endian::swapEndian<double>(mZMax);
-
-    mMMin = Endian::swapEndian<double>(mMMin);
-    mMMax = Endian::swapEndian<double>(mMMax);
+    mFileCode = swapEndian<int32_t>(mFileCode);
+    mFileLength = swapEndian<int32_t>(mFileLength);
 
     mShapeType = static_cast<Shape::ShapeType>(shapeType);
-}
-
-
-void ShapeHeader::debug()
-{
-    qDebug(
-        "shape type %d\n"
-        "bounding rect: x: {%f, %f} y: {%f, %f}, z: {%f, %f}, m: {%f, %f}",
-        mShapeType,
-        mXMin, mXMax,
-        mYMin, mYMax,
-        mZMin, mZMax,
-        mMMin, mMMax
-    );
 }
 
 

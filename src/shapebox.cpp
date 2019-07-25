@@ -1,20 +1,14 @@
-// header
 #include "shapebox.h"
 
-// shapeloader
 #include "endian.h"
+#include "streamreader.h"
 
 
-void ShapeBox::deserialize(QDataStream &in)
+void ShapeBox::deserialize(std::ifstream& in)
 {
-    in >> mXMin;
-    in >> mYMin;
-    in >> mXMax;
-    in >> mYmax;
-
-    mXMin = Endian::swapEndian(mXMin);
-    mYMin = Endian::swapEndian(mYMin);
-    mXMax = Endian::swapEndian(mXMax);
-    mYmax = Endian::swapEndian(mYmax);
+    read(in, &mXMin);
+    read(in, &mYMin);
+    read(in, &mXMax);
+    read(in, &mYmax);
 }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-// shapeloader
 #include "shape.h"
 
 class ShapeBox : public Shape
@@ -9,7 +8,7 @@ class ShapeBox : public Shape
 public:
 
     ShapeBox() = default;
-    virtual void deserialize(QDataStream &in);
+    virtual void deserialize(std::ifstream& in);
 
 protected:
 

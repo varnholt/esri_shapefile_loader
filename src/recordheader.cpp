@@ -1,9 +1,10 @@
 #include "recordheader.h"
 
+#include "streamreader.h"
 
 
-void RecordHeader::deserialize(QDataStream &in)
+void RecordHeader::deserialize(std::ifstream& in)
 {
-    in >> mRecordNumber;
-    in >> mContentLength;
+    read(in, &mRecordNumber);
+    read(in, &mContentLength);
 }

@@ -1,31 +1,32 @@
 #pragma once
 
-// Qt
-#include <QString>
+#include <string>
 
-// shapeloader
 #include "shape.h"
 #include "shapeheader.h"
 #include "shapepolygon.h"
 
+
 class ShapeLoader
 {
+
 public:
 
     ShapeLoader() = default;
 
-    void load(const QString& filename);
+    void load(const std::string& filename);
 
-    const QList<ShapePolygon>& getPolygons();
+    const std::vector<ShapePolygon>& getPolygons();
     const ShapeHeader& getShapeHeader();
-    const QList<ShapePoint>& getPoints() const;
-    void setPoints(const QList<ShapePoint> &value);
+    const std::vector<ShapePoint>& getPoints() const;
+    void setPoints(const std::vector<ShapePoint> &value);
+
 
 protected:
 
     ShapeHeader mHeader;
 
-    QList<ShapePolygon> mPolygons;
-    QList<ShapePoint> mPoints;
+    std::vector<ShapePolygon> mPolygons;
+    std::vector<ShapePoint> mPoints;
 };
 

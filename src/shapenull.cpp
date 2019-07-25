@@ -1,15 +1,12 @@
-// header
 #include "shapenull.h"
 
-// shapeloader
 #include "endian.h"
+#include "streamreader.h"
 
 
-void ShapeNull::deserialize(QDataStream &in)
+void ShapeNull::deserialize(std::ifstream& in)
 {
     int32_t shapeType;
-    in >> shapeType;
-    shapeType = Endian::swapEndian(shapeType);
-
+    read(in, &shapeType);
     mShapeType = static_cast<Shape::ShapeType>(shapeType);
 }

@@ -1,12 +1,8 @@
 #pragma once
 
-// Qt
-#include <Qt>
-#include <QDataStream>
-
 #include <cstdint>
+#include <fstream>
 
-// shapeloader
 #include "shape.h"
 
 
@@ -17,8 +13,7 @@ public:
 
     ShapeHeader() = default;
 
-    void deserialize(QDataStream & in);
-    void debug();
+    void deserialize(std::ifstream& in);
 
     Shape::ShapeType getShapeType() const;
     void setShapeType(const Shape::ShapeType &value);

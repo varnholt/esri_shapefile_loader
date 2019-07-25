@@ -1,13 +1,11 @@
 #pragma once
 
-// Qt
-#include <QDataStream>
+#include <cstdint>
+#include <fstream>
 
-// shapeloader
 #include "recordheader.h"
 #include "shapepoint.h"
 
-#include <cstdint>
 
 class PointRecord
 {
@@ -16,7 +14,7 @@ public:
 
     PointRecord() = default;
 
-    void deserialize(QDataStream& in);
+    void deserialize(std::ifstream& in);
 
     const ShapePoint& getPoint() const;
     void setPoint(const ShapePoint &value);

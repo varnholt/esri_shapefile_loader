@@ -1,37 +1,32 @@
-// header
 #include "shapepolygon.h"
 
-// shapeloader
 #include "endian.h"
 #include "recordheader.h"
 #include "shapepoint.h"
+#include "streamreader.h"
 #include "vector2.h"
 
 
-void ShapePolygon::deserialize(QDataStream &in)
+void ShapePolygon::deserialize(std::ifstream& in)
 {
     RecordHeader rh;
     rh.deserialize(in);
 
     int32_t shapeType;
-    in >> shapeType;
+    read(in, &shapeType);
     mShapeType = static_cast<Shape::ShapeType>(shapeType);
 
     mBoundingBox.deserialize(in);
 
-    in >> mNumParts;
-    in >> mNumPoints;
-
-    mNumParts = Endian::swapEndian(mNumParts);
-    mNumPoints = Endian::swapEndian(mNumPoints);
+    read(in, &mNumParts);
+    read(in, &mNumPoints);
 
     // part pointers
     mParts = new int32_t[mNumParts + 1];
     for( int i = 0; i < mNumParts; i++ )
     {
         int32_t val = 0;
-        in >> val;
-        val = Endian::swapEndian(val);
+        read(in, &val);
         mParts[i] = val;
     }
 
@@ -46,9 +41,9 @@ void ShapePolygon::deserialize(QDataStream &in)
 }
 
 
-QList<ShapePolygon> ShapePolygon::simplify()
+std::vector<ShapePolygon> ShapePolygon::simplify()
 {
-   QList<ShapePolygon> parts;
+   std::vector<ShapePolygon> parts;
 
    // keep 1st part and create new polygons from other parts
    if (mNumParts>1)
@@ -68,7 +63,7 @@ QList<ShapePolygon> ShapePolygon::simplify()
          for (int v=start; v<stop; v++)
             poly.mPoints[poly.mNumPoints++]= mPoints[v];
 
-         parts.append( poly );
+         parts.push_back(poly);
       }
 
       mNumPoints= mParts[1]-1;
@@ -76,16 +71,6 @@ QList<ShapePolygon> ShapePolygon::simplify()
    }
 
    return parts;
-}
-
-
-void ShapePolygon::debug()
-{
-    qDebug(
-        "ShapePolygon::debug(): numParts: %d, numPoints: %d",
-        mNumParts,
-        mNumPoints
-    );
 }
 
 
@@ -125,16 +110,16 @@ Vector2 nearestLinePoint(const Vector2& p, const Vector2& l1, const Vector2& l2)
 //! optimize polygon (remove redundant vertices)
 void ShapePolygon::optimize(float eps)
 {
-   QList<Vector2> vertices;
-   QList<int32_t> s;
+   std::vector<Vector2> vertices;
+   std::vector<int32_t> s;
 
-   for (int32_t i=0; i<mNumPoints; i++)
+   for (auto i = 0; i < mNumPoints; i++)
    {
-      vertices.append(Vector2(mPoints[i].getX(), mPoints[i].getY()));
-      s.append(i);
+      vertices.push_back(Vector2(mPoints[i].getX(), mPoints[i].getY()));
+      s.push_back(i);
    }
 
-   QList<int32_t> opt;
+   std::vector<int32_t> opt;
 
    const auto size = s.size();
    auto i1= s.at(size-2);
@@ -161,7 +146,7 @@ void ShapePolygon::optimize(float eps)
 
       if (d > eps || l1.dot(l2) < 0.5)
       {
-         opt.append( i2 );
+         opt.push_back( i2 );
          prev = keep;
          keep = v2;
       }
@@ -173,42 +158,10 @@ void ShapePolygon::optimize(float eps)
       i2 = i3;
    }
 
-/*
-   // remove duplicates
-   for (int i=0; i<opt.size(); )
-   {
-      if (i==0)
-         v1= vertices[ opt.at(opt.size()-1) ];
-      else
-         v1= vertices[ opt.at(i-1) ];
-
-      v2= vertices[ opt.at(i) ];
-
-      if (i==opt.size()-1)
-         v3= vertices[ opt.at(0) ];
-      else
-         v3= vertices[ opt.at(i+1) ];
-
-      Vector2 dir1= Vector2::normalize( v2 - v1 );
-      Vector2 dir2= Vector2::normalize( v3 - v2 );
-      float a= dir1.dot(dir2);
-
-      float d= v1.distance2(v2);
-      if (d < 0.1f && a > 0.9)
-      {
-         opt.removeAt(i);
-      }
-      else
-      {
-         i++;
-      }
-   }
-*/
-
    // remove linear neighbours
    for (int i=1; i<opt.size(); )
    {
-      if (i==0)
+      if (i == 0)
       {
          v1 = vertices[opt.at(opt.size()-1)];
       }
@@ -234,15 +187,13 @@ void ShapePolygon::optimize(float eps)
 
       if (a > 0.999f)
       {
-         opt.removeAt(i-1);
+         opt.erase(opt.begin() + i - 1);
       }
       else
       {
          i++;
       }
    }
-
-   qDebug("optimized %d -> %d", mNumPoints, opt.size());
 
    for (auto i = 0u; i < opt.size(); i++)
    {

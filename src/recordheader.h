@@ -1,9 +1,7 @@
 #pragma once
 
-// Qt
-#include <QDataStream>
 #include <cstdint>
-
+#include <fstream>
 
 class RecordHeader
 {
@@ -11,7 +9,7 @@ public:
 
     RecordHeader() = default;
     virtual ~RecordHeader() = default;
-    virtual void deserialize(QDataStream& in);
+    virtual void deserialize(std::ifstream& in);
 
 protected:
 

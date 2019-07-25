@@ -1,7 +1,6 @@
 #pragma once
 
-// Qt
-#include <QDataStream>
+#include <fstream>
 
 class Shape
 {
@@ -28,7 +27,7 @@ public:
         ShapeTypeMultiPatch  = 31
     };
 
-    virtual void deserialize(QDataStream& in) = 0;
+    virtual void deserialize(std::ifstream& in) = 0;
 
 
 protected:

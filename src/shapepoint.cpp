@@ -1,19 +1,13 @@
-// header
 #include "shapepoint.h"
 
-// shapeloader
 #include "endian.h"
+#include "streamreader.h"
 
 
-void ShapePoint::deserialize(QDataStream &in)
+void ShapePoint::deserialize(std::ifstream& in)
 {
-    in >> mX;
-    in >> mY;
-
-    mX = Endian::swapEndian(mX);
-    mY = Endian::swapEndian(mY);
-
-    // qDebug("point: %f, %f", mX, mY);
+    read(in, &mX);
+    read(in, &mY);
 }
 
 
