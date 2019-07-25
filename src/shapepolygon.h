@@ -22,10 +22,10 @@ public:
 
     // little endian
 
-    int32_t mNumParts = 0;
-    int32_t mNumPoints = 0;
-    int32_t* mParts = nullptr;
-    ShapePoint* mPoints = nullptr;
+    uint32_t mNumParts = 0;
+    uint32_t mNumPoints = 0;
+    std::vector<uint32_t> mParts;
+    std::vector<ShapePoint> mPoints;
 
 };
 

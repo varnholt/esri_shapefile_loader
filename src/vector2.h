@@ -4,11 +4,14 @@
 
 struct Vector2
 {
-   float x,y;
+   float x = 0.0f;
+   float y = 0.0f;
 
-   Vector2() { };
+   Vector2() = default;
 
-   Vector2(float px, float py) : x(px), y(py) { };
+   Vector2(float px, float py) : x(px), y(py)
+   {
+   }
 
    Vector2 operator - (const Vector2& a) const
    {
