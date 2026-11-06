@@ -127,6 +127,10 @@ void cambridge(App& app)
 }
 
 constexpr std::array<SceneInfo, 5> scene_list{{
+   {"Cambridge 3D buildings",
+    "709 MultiPatch buildings around Kendall Square and MIT from the City of Cambridge 3D model, in Massachusetts state "
+    "plane feet, coloured by height.",
+    cambridge},
    {"World population",
     "Natural Earth 1:50m countries by population estimate (log scale), 1:110m lakes, rivers and populated places sized by "
     "population.",
@@ -134,10 +138,6 @@ constexpr std::array<SceneInfo, 5> scene_list{{
    {"Time zones", "Natural Earth 1:10m time zones by UTC offset, with 1:50m country borders.", time_zones},
    {"Continents", "Natural Earth 1:50m countries by continent, with the largest cities.", continents},
    {"Income groups", "Natural Earth 1:50m countries by World Bank income group.", income},
-   {"Cambridge 3D buildings",
-    "709 MultiPatch buildings around Kendall Square and MIT from the City of Cambridge 3D model, in Massachusetts state "
-    "plane feet, coloured by height.",
-    cambridge},
 }};
 
 double distance_to_segment(double px, double py, double ax, double ay, double bx, double by)
