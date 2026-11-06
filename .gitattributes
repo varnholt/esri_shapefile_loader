@@ -1,0 +1,6 @@
+*.shp binary
+*.shx binary
+*.dbf binary
+*.png binary
+*.prj text eol=lf
+*.cpg text eol=lf

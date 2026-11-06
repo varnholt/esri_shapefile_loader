@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tinyshp testbed</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0e1015; color: #dde; font: 14px system-ui, sans-serif; overflow: hidden; }
+    canvas { display: block; width: 100vw; height: 100vh; outline: none; }
+    #status { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; }
+    #bar { position: fixed; right: 12px; top: 10px; display: flex; gap: 10px; align-items: center; }
+    #bar button { background: #2b4a75; color: #fff; border: 0; border-radius: 6px; padding: 7px 12px; font: inherit; cursor: pointer; }
+    #bar button:hover { background: #36609a; }
+    #hint { color: #9ab; font-size: 12px; }
+    #link { position: fixed; right: 12px; bottom: 10px; color: #8ab4f8; text-decoration: none; }
+    #drop { position: fixed; inset: 0; display: none; place-items: center; background: rgba(20, 40, 70, 0.75);
+            border: 3px dashed #8ab4f8; font-size: 22px; pointer-events: none; }
+    body.dragging #drop { display: grid; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="status">loading...</div>
+  <div id="bar">
+    <span id="hint">.shp + .dbf + .prj, or a .zip</span>
+    <button id="open">Open shapefiles...</button>
+    <input id="files" type="file" multiple accept=".shp,.dbf,.prj,.cpg,.shx,.zip" hidden>
+  </div>
+  <div id="drop">drop shapefiles or a .zip</div>
+  <a id="link" href="https://github.com/varnholt/tinyshp">github.com/varnholt/tinyshp</a>
+  <script>
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      setStatus: function (text) { document.getElementById('status').textContent = text; },
+      onRuntimeInitialized: function () { document.getElementById('canvas').focus(); },
+      print: function (text) { console.log(text); },
+      printErr: function (text) { console.error(text); }
+    };
+    window.addEventListener('error', function () { Module.setStatus('the testbed needs WebGL2'); });
+
+    // shapefiles come as several files; zips are unpacked here with the browser's own inflate
+    const wanted = /\.(shp|dbf|prj|cpg|shx)$/i;
+
+    async function unzip(buffer) {
+      const view = new DataView(buffer);
+      let end = buffer.byteLength - 22;
+      while (end >= 0 && view.getUint32(end, true) !== 0x06054b50) end--;
+      if (end < 0) throw new Error('not a zip file');
+      const count = view.getUint16(end + 10, true);
+      let at = view.getUint32(end + 16, true);
+      const files = [];
+      for (let i = 0; i < count; i++) {
+        if (view.getUint32(at, true) !== 0x02014b50) break;
+        const method = view.getUint16(at + 10, true);
+        const size = view.getUint32(at + 20, true);
+        const nameLength = view.getUint16(at + 28, true);
+        const extraLength = view.getUint16(at + 30, true);
+        const commentLength = view.getUint16(at + 32, true);
+        const local = view.getUint32(at + 42, true);
+        const name = new TextDecoder().decode(new Uint8Array(buffer, at + 46, nameLength));
+        at += 46 + nameLength + extraLength + commentLength;
+        const base = name.split('/').pop();
+        if (!wanted.test(base) || name.startsWith('__MACOSX')) continue;
+        const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
+        const data = new Uint8Array(buffer, start, size);
+        if (method === 0) {
+          files.push({ name: base, data: data.slice() });
+        } else if (method === 8) {
+          const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+          files.push({ name: base, data: new Uint8Array(await new Response(stream).arrayBuffer()) });
+        }
+      }
+      return files;
+    }
+
+    let uploads = 0;
+    async function openFiles(list) {
+      const files = [];
+      for (const file of list) {
+        const buffer = await file.arrayBuffer();
+        if (/\.zip$/i.test(file.name)) {
+          try { files.push(...await unzip(buffer)); } catch (e) { console.error(file.name, e); }
+        } else if (wanted.test(file.name)) {
+          files.push({ name: file.name, data: new Uint8Array(buffer) });
+        }
+      }
+      if (!files.length) return;
+      const directory = '/upload/' + (++uploads);
+      Module.FS.mkdirTree(directory);
+      for (const file of files) Module.FS.writeFile(directory + '/' + file.name, file.data);
+      Module.ccall('testbed_open', null, ['string'], [directory]);
+      document.getElementById('canvas').focus();
+    }
+
+    const input = document.getElementById('files');
+    document.getElementById('open').addEventListener('click', () => input.click());
+    input.addEventListener('change', () => { openFiles(input.files); input.value = ''; });
+
+    let depth = 0;
+    window.addEventListener('dragenter', (e) => { e.preventDefault(); depth++; document.body.classList.add('dragging'); });
+    window.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; document.body.classList.remove('dragging'); } });
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      depth = 0;
+      document.body.classList.remove('dragging');
+      openFiles(e.dataTransfer.files);
+    });
+  </script>
+  {{{ SCRIPT }}}
+</body>
+</html>

@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows MSVC
+            os: windows-latest
+            configure: ""
+          - name: Linux GCC 14
+            os: ubuntu-24.04
+            configure: -DCMAKE_CXX_COMPILER=g++-14
+          - name: Linux Clang 20
+            os: ubuntu-24.04
+            configure: -DCMAKE_CXX_COMPILER=clang++-20
+          - name: macOS AppleClang
+            os: macos-15
+            configure: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # clang 18 cannot use libstdc++'s std::expected, clang 19+ can
+      - name: Install Clang 20
+        if: contains(matrix.configure, 'clang++-20')
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          sudo bash llvm.sh 20
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.configure }}
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      # the tests include the examples: shp2geojson and shp2obj on the sample data
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      # the package must pull in nothing but the header
+      - name: Install and consume with find_package
+        shell: bash
+        run: |
+          cmake --install build --config Release --prefix "$PWD/prefix"
+          cmake -S tests/package_consumer -B consumer -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/prefix" ${{ matrix.configure }}
+          cmake --build consumer --config Release
+          if [ -f consumer/Release/consumer.exe ]; then consumer/Release/consumer.exe; else consumer/consumer; fi
+
+  sanitizers:
+    name: Sanitizers and fuzzing (Clang 20)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Clang 20 with the sanitizer and libFuzzer runtimes
+        run: |
+          wget -q https://apt.llvm.org/llvm.sh
+          sudo bash llvm.sh 20
+          sudo apt-get install -y libclang-rt-20-dev
+
+      - name: Tests under address and undefined behavior sanitizers
+        run: |
+          cmake -S . -B build-asan -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=clang++-20 \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
+          cmake --build build-asan --parallel
+          ctest --test-dir build-asan --output-on-failure
+
+      - name: Fuzz for 60 seconds
+        run: |
+          cmake -S . -B build-fuzz -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++-20 \
+            -DTINYSHP_BUILD_TESTS=OFF -DTINYSHP_BUILD_EXAMPLES=OFF -DTINYSHP_BUILD_FUZZER=ON
+          cmake --build build-fuzz --parallel
+          python3 tests/fuzz/make_corpus.py data corpus
+          ./build-fuzz/tests/fuzz/tinyshp_fuzz corpus -max_total_time=60 -max_len=65536 -rss_limit_mb=1024
+
+  testbed-native:
+    name: testbed (Windows, Linux with Mesa)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GLFW and Mesa dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xorg-dev libwayland-dev libxkbcommon-dev wayland-protocols \
+            libgles-dev libegl-dev libgl1-mesa-dri xvfb
+
+      - name: Build
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then export CXX=g++-14 CC=gcc-14; fi
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DTINYSHP_BUILD_TESTBED=ON -DTINYSHP_BUILD_TESTS=OFF
+          cmake --build build --config Release --parallel --target tinyshp_testbed
+
+      - name: Render every scene with software OpenGL ES
+        if: runner.os == 'Linux'
+        env:
+          LIBGL_ALWAYS_SOFTWARE: 1
+        run: |
+          for scene in 0 1 2 3 4; do
+            xvfb-run -a ./build/testbed/tinyshp_testbed --scene $scene --size 1280x720 --screenshot scene-$scene.png
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: testbed-screenshots
+          path: scene-*.png
+
+  web:
+    name: web (Emscripten, WebGL2)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+
+      - name: Build
+        run: |
+          emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release -DTINYSHP_BUILD_TESTBED=ON
+          cmake --build build-web --parallel
+
+      - name: Test under Node
+        run: ctest --test-dir build-web --output-on-failure
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: testbed-web
+          path: |
+            build-web/testbed/tinyshp_testbed.html
+            build-web/testbed/tinyshp_testbed.js
+            build-web/testbed/tinyshp_testbed.wasm
+            build-web/testbed/tinyshp_testbed.data
+
+  pages:
+    name: deploy live demo
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+    needs: web
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: testbed-web
+          path: site
+
+      - name: Use the testbed as the start page
+        run: mv site/tinyshp_testbed.html site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
