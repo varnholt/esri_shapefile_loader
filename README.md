@@ -199,4 +199,4 @@ The specification: [ESRI Shapefile Technical Description](https://www.esri.com/c
 
 ## License
 
-See `LICENSE`. The sample data in `data/` is public domain, see `data/README.md`.
+MIT, see `LICENSE`. The sample data in `data/` is public domain, see `data/README.md`.
