@@ -48,7 +48,9 @@ std::filesystem::path utf8_path(std::string_view text)
 }
 
 // the browser hands uploads to this through a directory in the in-memory file system
+#ifdef __EMSCRIPTEN__
 App* web_app = nullptr;
+#endif
 
 void on_key(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/)
 {
