@@ -9,7 +9,7 @@ shows them on a map, a globe or in 3D, and that also runs in the browser.
 **[Live demo](https://varnholt.github.io/tinyshp/)**: the testbed as WebAssembly. Drop your own shapefiles or a `.zip`
 on it; they stay in your browser.
 
-[![the testbed: Natural Earth countries by population on a globe, with the attributes of China](doc/testbed.png)](https://varnholt.github.io/tinyshp/)
+[![the testbed: City of Cambridge MultiPatch buildings around Kendall Square, coloured by height, with the attributes of one](doc/testbed.png)](https://varnholt.github.io/tinyshp/)
 
 - one header, no dependencies beyond the standard library: copy `include/tinyshp/tinyshp.hpp` into your project
 - or use it as a CMake library: `add_subdirectory`, `FetchContent` or `find_package`
@@ -118,15 +118,15 @@ wrote 709 shapes, 1906 triangles and 28654 polygon faces to kendall.obj
 
 ![Natural Earth time zones on a globe](doc/time_zones.png) ![Natural Earth countries by continent](doc/continents.png)
 
-![City of Cambridge 3D buildings around Kendall Square with the attributes of one](doc/cambridge.png)
+![Natural Earth countries by population on a globe, with the attributes of China](doc/world_population.png)
 
 The testbed draws shapefiles on a flat map, on a globe or, for 3D data, as a lit scene. It comes with a few scenes:
 
+- **Cambridge 3D buildings**: 709 MultiPatch buildings around Kendall Square and MIT from the City of Cambridge's 3D model,
+  coloured by height
 - **World population**: countries by population on a globe, with lakes, rivers and cities sized by population
 - **Time zones**: Natural Earth's 1:10m time zones by UTC offset under the country borders
 - **Continents** and **Income groups**: categorical maps
-- **Cambridge 3D buildings**: 709 MultiPatch buildings around Kendall Square and MIT from the City of Cambridge's 3D model,
-  coloured by height
 
 Hover over anything to see its attributes. A Dear ImGui panel colours each layer by a field (categories or a graduated
 ramp, optionally on a log scale), sizes points by a field and labels them. Your own files work too: drop `.shp` files,
@@ -150,7 +150,7 @@ Space spin the globe.
 Screenshots without a window, optionally with the panel and the tooltip at a pixel:
 
 ```sh
-./build/testbed/tinyshp_testbed --scene 4 --size 1280x720 --screenshot cambridge.png --mouse 640,360
+./build/testbed/tinyshp_testbed --scene 0 --size 1280x720 --screenshot cambridge.png --mouse 640,360
 ```
 
 The browser build:
